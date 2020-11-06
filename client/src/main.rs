@@ -1,3 +1,5 @@
+mod client_utils;
+
 use std::io::{self, ErrorKind, Read, Write};
 use std::net::TcpStream;
 use std::sync::mpsc::{self, TryRecvError};
