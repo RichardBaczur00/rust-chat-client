@@ -2,11 +2,11 @@ use std::io::{ErrorKind, Read, Write};
 use std::net::TcpListener;
 use std::sync::mpsc;
 use std::thread;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet};
 
 struct Mesasge {
     source: String,
-    msg: String
+    msg: String,    
 }
 
 const LOCAL: &str = "127.0.0.1:6000";
@@ -14,6 +14,7 @@ const MSG_SIZE: usize = 32;
 static mut CHAT_ROOMS: Vec<HashMap<String, String>> = Vec::new();
 static mut CLIENT_LOOKUP: Vec<HashMap<String, usize>> = Vec::new();
 static mut MESSAGE_QUEUE: Vec<Mesasge> = Vec::new();
+static mut ENCRYPTION_LOOKUP: Vec<HashSet<String>> = Vec::new();
 
 
 fn sleep() {
@@ -36,6 +37,7 @@ fn main() {
     unsafe {
         CHAT_ROOMS.push(HashMap::new());
         CLIENT_LOOKUP.push(HashMap::new());
+        ENCRYPTION_LOOKUP.push(HashSet::new());
     }
 
     let mut clients = vec![];
@@ -64,24 +66,22 @@ fn main() {
                             let _ = cmd.next();
                             let foreign_token = cmd.next().unwrap();
                             let local_token = get_token(addr.to_string()).unwrap();
-                            
+
                             unsafe {
                                 CHAT_ROOMS[0].insert(local_token.to_string(), foreign_token.to_string());
                                 CHAT_ROOMS[0].insert(foreign_token.to_string(), local_token.to_string());
                                 println!("{} connected to {}", local_token.to_string(), foreign_token.to_string());
                             }
                         }
+
                         unsafe {
-                            /*
-                            if CHAT_ROOMS[0].contains_key(&get_token(addr.to_string()).unwrap()) {
-                                let f_addr = CHAT_ROOMS[0].get(&get_token(addr.to_string()).unwrap()).unwrap().to_string();
-                                clients[CLIENT_LOOKUP[0][&get_token(f_addr).unwrap()]].write_all(&msg.clone().into_bytes());
-                            }
-                            */
+                            let local_token = get_token(addr.to_string()).unwrap();
+
                             MESSAGE_QUEUE.push(Mesasge {
-                                source: get_token(addr.to_string()).unwrap(),
+                                source: local_token,
                                 msg: msg.clone(),
                             })
+
                         }
                         println!("{}: {:?}", addr, msg);
                         tx.send(msg).expect("failed to send msg to rx");
