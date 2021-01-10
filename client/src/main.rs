@@ -20,7 +20,7 @@ fn main() {
         match client.read_exact(&mut buff) {
             Ok(_) => {
                 let msg = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
-                println!("message recv {:?}", msg);
+                println!("message recv {:?}", client_utils::encode_message(&std::str::from_utf8(&msg).unwrap().to_string()));
             },
             Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
             Err(_) => {
@@ -47,7 +47,10 @@ fn main() {
     loop {
         let mut buff = String::new();
         io::stdin().read_line(&mut buff).expect("reading from stdin failed");
-        let msg = buff.trim().to_string();
+        let mut msg = buff.trim().to_string();
+        if msg.chars().nth(0).unwrap() != ':' {
+            msg = client_utils::encode_message(&msg);
+        }
         if msg == ":quit" || tx.send(msg).is_err() {break}
     }
     println!("bye bye!");

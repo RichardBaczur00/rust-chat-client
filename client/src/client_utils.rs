@@ -1,17 +1,9 @@
-struct Message {
-    source: String,
-    encryption_flag: u8,
-    message: String
-}
+pub fn encode_message(msg: &String) -> String {
+    let mut result: String = "".to_string();
 
-
-fn decode_message(buff: &Vec<u8>) -> Message {
-    
-
-    // Placeholders here until the function is implemented
-    return Message {
-        source: "".to_string(),
-        encryption_flag: 0,
-        message: "".to_string()
+    for chr in msg.chars() {
+        result.push((chr as u8 ^ 0b00110101) as char);
     }
+
+    return result;
 }
